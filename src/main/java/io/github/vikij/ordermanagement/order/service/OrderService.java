@@ -8,85 +8,69 @@ import io.github.vikij.ordermanagement.order.entity.OrderStatus;
 import io.github.vikij.ordermanagement.order.repository.OrderRepository;
 import io.github.vikij.ordermanagement.user.entity.AppUser;
 import io.github.vikij.ordermanagement.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
 
-    public OrderService(OrderRepository orderRepository,
-                        UserRepository userRepository) {
-        this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
-    }
-
-    public List<Order> getOrders(Authentication auth) {
+    public Page<Order> getOrders(Authentication auth, Pageable pageable) {
 
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if (isAdmin) {
-            return orderRepository.findAllWithItems();
-            //return orderRepository.findAll();
+            return orderRepository.findAll(pageable);
         }
 
         AppUser user = userRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return orderRepository.findWithItemsByCreatedBy(user);
-        //return orderRepository.findByCreatedBy(user);
+        return orderRepository.findByCreatedBy(user, pageable);
     }
 
+    @Transactional
     public Order createOrder(CreateOrderRequest request, Authentication auth) {
 
         AppUser user = userRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        String orderNumber = "ORD-" + System.currentTimeMillis();
+        String orderNumber = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
-        BigDecimal subtotal = request.getItems().stream()
-                .map(i -> i.getUnitPrice()
-                        .multiply(BigDecimal.valueOf(i.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal taxAmount = subtotal.multiply(new BigDecimal("0.18"));
-        BigDecimal totalAmount = subtotal.add(taxAmount);
-
-        CreateOrderRequest.DeliveryAddressRequest addr =
-                request.getDeliveryAddress();
-
-        Order order = new Order(
-                orderNumber,
-                subtotal,
-                taxAmount,
-                totalAmount,
-                addr.getAddressLine(),
-                addr.getCity(),
-                addr.getCountry(),
-                addr.getPostalCode(),
-                user
-        );
+        Order order = Order.builder()
+                .orderNumber(orderNumber)
+                .deliveryAddress(request.getDeliveryAddress().getAddressLine())
+                .deliveryCity(request.getDeliveryAddress().getCity())
+                .deliveryCountry(request.getDeliveryAddress().getCountry())
+                .deliveryPostalCode(request.getDeliveryAddress().getPostalCode())
+                .createdBy(user)
+                .build();
 
         request.getItems().forEach(i -> {
-            OrderItem item = new OrderItem(
-                    i.getProductCode(),
-                    i.getQuantity(),
-                    i.getUnitPrice()
-            );
+            OrderItem item = OrderItem.builder()
+                    .productCode(i.getProductCode())
+                    .quantity(i.getQuantity())
+                    .unitPrice(i.getUnitPrice())
+                    .build();
             order.addItem(item);
         });
 
+        // Totals are calculated inside addItem via calculateTotals()
         return orderRepository.save(order);
     }
 
-
+    @Transactional
     public Order updateStatus(String orderNumber, OrderStatus status) {
-
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
@@ -95,9 +79,8 @@ public class OrderService {
     }
 
     public Order getByOrderNumber(String orderNumber) {
-        return orderRepository.findByOrderNumberWithItems(orderNumber)
+        return orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     }
-
 }
 

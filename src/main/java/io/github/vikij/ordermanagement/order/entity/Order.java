@@ -2,6 +2,10 @@ package io.github.vikij.ordermanagement.order.entity;
 
 import io.github.vikij.ordermanagement.user.entity.AppUser;
 import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,6 +14,12 @@ import java.util.List;
 
 @Entity
 @Table(name = "orders")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
 public class Order {
 
     @Id
@@ -30,15 +40,18 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private OrderStatus status;
+    @Builder.Default
+    private OrderStatus status = OrderStatus.CREATED;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "created_by", nullable = false)
     private AppUser createdBy;
 
-    @Column(nullable = false)
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
@@ -58,42 +71,32 @@ public class Order {
     private String deliveryPostalCode;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private final List<OrderItem> items = new ArrayList<>();
-
-    protected Order() {
-
-    }
-
-    public Order(String orderNumber, BigDecimal subtotal, BigDecimal taxAmount, BigDecimal totalAmount, String deliveryAddress, String deliveryCity, String deliveryCountry, String deliveryPostalCode, AppUser createdBy) {
-
-        this.orderNumber = orderNumber;
-        this.subtotal = subtotal;
-        this.taxAmount = taxAmount;
-        this.totalAmount = totalAmount;
-
-        this.deliveryAddress = deliveryAddress;
-        this.deliveryCity = deliveryCity;
-        this.deliveryCountry = deliveryCountry;
-        this.deliveryPostalCode = deliveryPostalCode;
-
-        this.createdBy = createdBy;
-        this.status = OrderStatus.CREATED;
-        this.createdAt = LocalDateTime.now();
-    }
 
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);
+        calculateTotals();
     }
 
     public void removeItem(OrderItem item) {
         items.remove(item);
         item.setOrder(null);
+        calculateTotals();
+    }
+
+    public void calculateTotals() {
+        this.subtotal = items.stream()
+                .map(i -> i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        this.taxAmount = subtotal.multiply(new BigDecimal("0.18"));
+        this.totalAmount = subtotal.add(taxAmount);
     }
 
     public void updateStatus(OrderStatus newStatus) {
         this.status = newStatus;
-        this.updatedAt = LocalDateTime.now();
 
         if (newStatus == OrderStatus.COMPLETED) {
             this.completedAt = LocalDateTime.now();
@@ -105,43 +108,6 @@ public class Order {
 
         if (newStatus == OrderStatus.PROCESSING) {
             this.cancelledAt = null;
-            this.updatedAt = LocalDateTime.now();
         }
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getOrderNumber() {
-        return orderNumber;
-    }
-
-    public BigDecimal getSubtotal() {
-        return subtotal;
-    }
-
-    public BigDecimal getTaxAmount() {
-        return taxAmount;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public AppUser getCreatedBy() {
-        return createdBy;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public List<OrderItem> getItems() {
-        return items;
     }
 }

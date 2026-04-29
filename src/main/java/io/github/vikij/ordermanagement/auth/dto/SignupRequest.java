@@ -1,16 +1,20 @@
 package io.github.vikij.ordermanagement.auth.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SignupRequest {
-
+    @NotBlank
+    @Size(min = 3, max = 50)
     private String username;
+    @NotBlank
+    @Size(min = 6, max = 100)
     private String password;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
 }
 

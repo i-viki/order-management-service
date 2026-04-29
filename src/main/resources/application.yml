@@ -3,12 +3,14 @@ spring:
     name: order-management
   config:
     import: optional:file:.env[.properties]
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:h2:mem:orderdb;DB_CLOSE_DELAY=-1}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
 
     hikari:
       minimum-idle: 5
@@ -24,14 +26,19 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.H2Dialect}
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
 server:
   port: 8080
 
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:secret_key_for_dev_only_must_be_changed_in_prod_at_least_32_chars_long}
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}
 
 logging:

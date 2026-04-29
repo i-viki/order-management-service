@@ -24,18 +24,24 @@ public class SecurityConfig {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // Required for H2 Console
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**",
-                                "/orders/*/status").permitAll()
+                        .requestMatchers(
+                                "/auth/**",
+                                "/orders/*/status",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/h2-console/**"
+                        ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/orders/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtUtil),UsernamePasswordAuthenticationFilter.class
+                        new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();

@@ -1,11 +1,20 @@
 package io.github.vikij.ordermanagement.user.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
 public class AppUser {
 
     @Id
@@ -23,43 +32,10 @@ public class AppUser {
     private Role role;
 
     @Column(nullable = false)
-    private final boolean active = true;
+    @Builder.Default
+    private boolean active = true;
 
-    @Column(nullable = false)
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    protected AppUser() {
-
-    }
-
-    public AppUser(String username, String password, Role role) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 }

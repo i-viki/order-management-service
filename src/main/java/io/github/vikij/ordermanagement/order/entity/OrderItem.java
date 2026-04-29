@@ -1,11 +1,17 @@
 package io.github.vikij.ordermanagement.order.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_items")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrderItem {
 
     @Id
@@ -25,28 +31,4 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    protected OrderItem() {
-    }
-
-    public OrderItem(String productCode, Integer quantity, BigDecimal unitPrice) {
-        this.productCode = productCode;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
-    }
-
-    void setOrder(Order order) {
-        this.order = order;
-    }
-
-    public String getProductCode() {
-        return productCode;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
-    }
 }

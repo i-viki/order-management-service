@@ -2,46 +2,46 @@ package io.github.vikij.ordermanagement.order.controller;
 
 import io.github.vikij.ordermanagement.order.dto.*;
 import io.github.vikij.ordermanagement.order.entity.Order;
+import io.github.vikij.ordermanagement.order.mapper.OrderMapper;
 import io.github.vikij.ordermanagement.order.service.OrderService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/orders")
+@RequiredArgsConstructor
+@Slf4j
 public class OrderController {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(OrderController.class);
-
     private final OrderService orderService;
-
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
+    private final OrderMapper orderMapper;
 
     /**
      * USER -> own orders
      * ADMIN -> all orders
      */
     @GetMapping
-    public List<OrderResponse> getOrders(Authentication authentication) {
+    public Page<OrderResponse> getOrders(@PageableDefault(size = 10) Pageable pageable,
+                                         Authentication authentication) {
 
-        return orderService.getOrders(authentication).stream()
-                .map(this::toOrderResponse)
-                .toList();
+        return orderService.getOrders(authentication, pageable)
+                .map(orderMapper::toResponse);
     }
 
     @PostMapping
-    public OrderResponse createOrder(@RequestBody CreateOrderRequest request,
+    public OrderResponse createOrder(@Valid @RequestBody CreateOrderRequest request,
                                      Authentication authentication) {
 
+        log.info("Creating order for user: {}", authentication.getName());
         Order saved = orderService.createOrder(request, authentication);
-        return toOrderResponse(saved);
+        return orderMapper.toResponse(saved);
     }
 
     /**
@@ -65,33 +65,16 @@ public class OrderController {
         );
     }
 
-
     /**
      * ADMIN only
      */
     @PatchMapping("/{orderNumber}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public OrderResponse updateOrderStatus(@PathVariable String orderNumber,
-                                           @RequestBody UpdateOrderStatusRequest request) {
+                                           @Valid @RequestBody UpdateOrderStatusRequest request) {
 
         Order updated = orderService.updateStatus(orderNumber, request.getStatus());
-        return toOrderResponse(updated);
-    }
-
-    private OrderResponse toOrderResponse(Order order) {
-        return new OrderResponse(
-                order.getOrderNumber(),
-                order.getTotalAmount(),
-                order.getStatus(),
-                order.getCreatedAt(),
-                order.getItems().stream()
-                        .map(item -> new OrderItemResponse(
-                                item.getProductCode(),
-                                item.getQuantity(),
-                                item.getUnitPrice()
-                        ))
-                        .toList()
-        );
+        return orderMapper.toResponse(updated);
     }
 
 }
