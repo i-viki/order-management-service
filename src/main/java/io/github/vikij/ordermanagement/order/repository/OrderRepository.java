@@ -15,6 +15,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findByCreatedBy(AppUser user, Pageable pageable);
 
     @EntityGraph(attributePaths = {"items"})
+    java.util.List<Order> findByCreatedBy(AppUser user);
+
+    @EntityGraph(attributePaths = {"items"})
     Page<Order> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"items"})

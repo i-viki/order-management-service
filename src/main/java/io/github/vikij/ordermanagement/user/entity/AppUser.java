@@ -25,6 +25,12 @@ public class AppUser {
     private String username;
 
     @Column(nullable = false)
+    private String email;
+
+    private String firstName;
+    private String lastName;
+
+    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)

@@ -33,6 +33,14 @@ spring:
       enabled: true
       path: /h2-console
 
+  ai:
+    openai:
+      api-key: ${GEMINI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
+      chat:
+        options:
+          model: gemini-flash-latest
+
 server:
   port: 8080
 
