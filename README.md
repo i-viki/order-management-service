@@ -1,8 +1,8 @@
-# AI-Augmented Order Management System
+# Order Lifecycle & Fulfillment Engine
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/spring/spring-original-wordmark.svg" alt="Spring Logo" width="100">
-  <p><i>A production-grade, AI-powered backend service for sophisticated order lifecycle management.</i></p>
+  <p><i>Enterprise order processing service with audited state machine transitions, grounded AI customer resolution, and JWT token rotation.</i></p>
 
   [![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat&logo=openjdk&logoColor=white)](https://adoptium.net/)
   [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.1-6DB33F?style=flat&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -22,7 +22,7 @@
 
 ## Overview
 
-The AI-Augmented Order Management System is an enterprise-level backend platform designed to modernize order processing. By integrating Spring AI, it enables customers to interact with their order history using natural language, while maintaining strict data privacy through Prompt Grounding.
+The Order Lifecycle & Fulfillment Engine is an enterprise backend service engineered for resilient order processing and intelligent customer resolution. By integrating Spring AI, it enables customers to interact with their order history using natural language, while maintaining strict data privacy through Prompt Grounding.
 
 Built with Java 17 and Spring Boot, the system follows a clean layered architecture and implements robust security measures including stateless JWT authentication and Role-Based Access Control (RBAC).
 

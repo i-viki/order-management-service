@@ -12,7 +12,7 @@
     <artifactId>order-management-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Order Management Service</name>
-    <description>Production-style Spring Boot REST API for order management</description>
+    <description>Order lifecycle &amp; fulfillment service featuring audited state transitions, grounded GenAI customer support, and JWT token rotation</description>
     <url/>
 
     <properties>

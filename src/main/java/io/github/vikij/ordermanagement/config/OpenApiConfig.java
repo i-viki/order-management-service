@@ -15,14 +15,14 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Order Management Service API")
+                        .title("Order Lifecycle & Fulfillment API")
                         .version("1.0")
-                        .description("Production-style Spring Boot REST API for order management"))
+                        .description("Order lifecycle & fulfillment service featuring audited state transitions, grounded GenAI customer support, and JWT token rotation"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth",
                                 new SecurityScheme()
-                                        .name("bearerAuth")
+                                         .name("bearerAuth")
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")));
