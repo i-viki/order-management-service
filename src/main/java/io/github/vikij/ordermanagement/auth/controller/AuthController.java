@@ -14,6 +14,8 @@ import io.github.vikij.ordermanagement.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,10 +36,14 @@ public class AuthController {
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         log.info("Login attempt for username={}", request.getUsername());
         AppUser user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+
+        if (!user.isActive()) {
+            throw new DisabledException("Account has been deactivated");
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new BadCredentialsException("Invalid credentials");
         }
 
         String accessToken = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
@@ -62,7 +68,7 @@ public class AuthController {
                             .refreshToken(request.getRefreshToken())
                             .build();
                 })
-                .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+                .orElseThrow(() -> new BadCredentialsException("Refresh token is not in database!"));
     }
 
     @PostMapping("/signup")

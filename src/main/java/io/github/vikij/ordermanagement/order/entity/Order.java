@@ -3,11 +3,13 @@ package io.github.vikij.ordermanagement.order.entity;
 import io.github.vikij.ordermanagement.user.entity.AppUser;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +73,7 @@ public class Order {
     private String deliveryPostalCode;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     @Builder.Default
     private final List<OrderItem> items = new ArrayList<>();
 
@@ -89,10 +92,13 @@ public class Order {
     public void calculateTotals() {
         this.subtotal = items.stream()
                 .map(i -> i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
 
-        this.taxAmount = subtotal.multiply(new BigDecimal("0.18"));
-        this.totalAmount = subtotal.add(taxAmount);
+        this.taxAmount = subtotal.multiply(new BigDecimal("0.18"))
+                .setScale(2, RoundingMode.HALF_UP);
+        this.totalAmount = subtotal.add(taxAmount)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     public void updateStatus(OrderStatus newStatus) {

@@ -47,7 +47,6 @@ class OrderServiceTest {
                 .build();
 
         mockAuth = mock(Authentication.class);
-        when(mockAuth.getName()).thenReturn("testuser");
     }
 
     @Test
@@ -69,6 +68,7 @@ class OrderServiceTest {
                 ))
                 .build();
 
+        when(mockAuth.getName()).thenReturn("testuser");
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(mockUser));
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> i.getArguments()[0]);
 

@@ -5,6 +5,8 @@ import io.github.vikij.ordermanagement.common.exception.ResourceNotFoundExceptio
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -55,6 +57,16 @@ public class GlobalExceptionHandler {
                         403,
                         "FORBIDDEN",
                         "You are not allowed to perform this action"
+                ));
+    }
+
+    @ExceptionHandler({BadCredentialsException.class, DisabledException.class})
+    public ResponseEntity<ApiErrorResponse> handleAuthenticationException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiErrorResponse(
+                        401,
+                        "UNAUTHORIZED",
+                        ex.getMessage()
                 ));
     }
 

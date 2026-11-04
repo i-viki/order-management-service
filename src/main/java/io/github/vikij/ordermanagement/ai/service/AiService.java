@@ -1,5 +1,6 @@
 package io.github.vikij.ordermanagement.ai.service;
 
+import io.github.vikij.ordermanagement.common.exception.ResourceNotFoundException;
 import io.github.vikij.ordermanagement.order.entity.Order;
 import io.github.vikij.ordermanagement.order.repository.OrderRepository;
 import io.github.vikij.ordermanagement.user.entity.AppUser;
@@ -42,7 +43,7 @@ public class AiService {
     public String getChatResponse(String userQuery, Authentication authentication) {
         String username = authentication.getName();
         AppUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
         List<Order> userOrders = orderRepository.findByCreatedBy(user);
         final String finalOrdersData = userOrders.isEmpty() 
@@ -52,9 +53,13 @@ public class AiService {
                         order.getOrderNumber(), order.getStatus(), order.getTotalAmount(), order.getCreatedAt()))
                 .collect(Collectors.joining("\n"));
 
+        String rawName = ((user.getFirstName() != null ? user.getFirstName() : "") + " " +
+                          (user.getLastName() != null ? user.getLastName() : "")).trim();
+        final String finalFullName = rawName.isEmpty() ? user.getUsername() : rawName;
+
         return chatClient.prompt()
                 .system(s -> s.text(SYSTEM_PROMPT_TEMPLATE)
-                        .param("name", user.getFirstName() + " " + user.getLastName())
+                        .param("name", finalFullName)
                         .param("email", user.getEmail())
                         .param("orders_data", finalOrdersData))
                 .user(userQuery)

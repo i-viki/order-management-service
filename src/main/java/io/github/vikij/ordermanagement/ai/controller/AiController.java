@@ -5,6 +5,7 @@ import io.github.vikij.ordermanagement.ai.dto.AiChatResponse;
 import io.github.vikij.ordermanagement.ai.service.AiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,7 +24,7 @@ public class AiController {
 
     @PostMapping("/chat")
     @Operation(summary = "Query the AI support assistant about your orders")
-    public ResponseEntity<AiChatResponse> chat(@RequestBody AiChatRequest request, Authentication authentication) {
+    public ResponseEntity<AiChatResponse> chat(@Valid @RequestBody AiChatRequest request, Authentication authentication) {
         String response = aiService.getChatResponse(request.getQuery(), authentication);
         return ResponseEntity.ok(AiChatResponse.builder()
                 .response(response)

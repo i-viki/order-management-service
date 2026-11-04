@@ -7,17 +7,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @EntityGraph(attributePaths = {"items"})
+    // Paginated queries avoid @EntityGraph on collections to prevent HHH000104 in-memory pagination
     Page<Order> findByCreatedBy(AppUser user, Pageable pageable);
 
     @EntityGraph(attributePaths = {"items"})
-    java.util.List<Order> findByCreatedBy(AppUser user);
+    List<Order> findByCreatedBy(AppUser user);
 
-    @EntityGraph(attributePaths = {"items"})
     Page<Order> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"items"})
