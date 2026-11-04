@@ -178,12 +178,12 @@ JWT_EXPIRATION_MS=3600000
 
 ## Author
 
-**Jayavignesh**
-*Backend Engineer specializing in High-Performance Java Systems.*
+**Jaya Vignesh (Jayavignesh)**
+*Java Backend Engineer specializing in High-Performance Java Systems.*
 
 - [Portfolio](https://jayavignesh.dev)
 - [GitHub](https://github.com/i-viki)
-- [LinkedIn](https://www.linkedin.com/in/viki-j)
+- [LinkedIn](https://www.linkedin.com/in/jayavigneshj/)
 
 ---
 <div align="center">
