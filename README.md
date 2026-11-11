@@ -7,7 +7,9 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-18181b?logo=mysql&logoColor=4479A1&labelColor=101012)](https://www.mysql.com)
 [![Hibernate](https://img.shields.io/badge/Hibernate-JPA-18181b?logo=hibernate&logoColor=59666C&labelColor=101012)](https://hibernate.org)
 [![MapStruct](https://img.shields.io/badge/MapStruct-1.6.0-18181b?logo=mapstruct&logoColor=F58220&labelColor=101012)](https://mapstruct.org)
+[![Lombok](https://img.shields.io/badge/Lombok-1.18.34-18181b?logo=lombok&logoColor=BC1B1B&labelColor=101012)](https://projectlombok.org)
 [![Swagger](https://img.shields.io/badge/Swagger-OpenAPI_3-18181b?logo=swagger&logoColor=85EA2D&labelColor=101012)](https://swagger.io)
+[![Maven](https://img.shields.io/badge/Maven-3.9+-18181b?logo=apachemaven&logoColor=C71A36&labelColor=101012)](https://maven.apache.org)
 [![JWT](https://img.shields.io/badge/Security-JWT-18181b?logo=jsonwebtokens&logoColor=FFFFFF&labelColor=101012)](https://jwt.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -82,9 +84,21 @@ flowchart TB
     JPA <--> DB
 ```
 
+### Project Structure
+
+```text
+io.github.vikij.ordermanagement
+├── auth         # Security infrastructure (JWT, RBAC)
+├── order        # Core domain, business logic, and mapping
+├── ai           # AI orchestration and prompt grounding
+├── user         # Identity management
+├── common       # Shared exceptions and error models
+└── config       # Infrastructure configuration (Dotenv, Security)
+```
+
 ---
 
-## Order State Machine & Grounding Invariants
+## Order State Machine & Prompt Grounding Invariants
 
 The platform maintains strict integrity across order status progressions and AI reasoning boundaries:
 
@@ -101,12 +115,53 @@ $$\text{Context}_{\text{LLM}} = \{ O_k \in \text{Orders} \mid O_k.\text{userId} 
 | **`COMPLETED`** | *Terminal* | Immutable record; archive state | None |
 | **`CANCELLED`** | *Terminal* | Immutable record; refund issued | None |
 
+### Dynamic Prompt Grounding Implementation
+
+The system implements a secure grounding pattern to prevent data leaks. Before dispatching queries to Gemini, `AiService` executes:
+
+1. **Identity Extraction:** Extracts the authenticated user identity from Spring Security's `SecurityContextHolder`.
+2. **Authorized Retrieval:** Queries the relational persistence store strictly for orders owned by the caller (`orderRepository.findByCreatedBy(user)`).
+3. **Context Injection:** Synthesizes the retrieved order records into a constrained system prompt template.
+4. **Execution:** Dispatches the grounded prompt and customer query to Gemini Flash.
+
+```java
+// Logic implemented in AiService.java
+String ordersData = userOrders.stream()
+    .map(order -> String.format("- Order #%s: %s", order.getOrderNumber(), order.getStatus()))
+    .collect(Collectors.joining("\n"));
+
+return chatClient.prompt()
+    .system(s -> s.text(SYSTEM_PROMPT_TEMPLATE)
+        .param("name", user.getFirstName())
+        .param("orders_data", ordersData))
+    .user(userQuery)
+    .call()
+    .content();
+```
+
+---
+
+## Core API Specification
+
+All endpoints are prefixed with `/api/v1`.
+
+| Resource | Method & Path | Authorization | Description |
+| :--- | :--- | :---: | :--- |
+| **Authentication** | `POST /api/v1/auth/signup` | Public | Registers a new user account with BCrypt password hashing. |
+| **Authentication** | `POST /api/v1/auth/login` | Public | Authenticates credentials and returns Access & Refresh tokens. |
+| **Authentication** | `POST /api/v1/auth/refresh` | Public | Issues a new access token using a valid refresh token. |
+| **AI Support** | `POST /api/v1/ai/chat` | **Authenticated** | Queries the grounded AI assistant regarding personal order records. |
+| **Orders** | `POST /api/v1/orders` | `ROLE_USER` | Creates a new order with automated tax calculations. |
+| **Orders** | `GET /api/v1/orders` | `ROLE_USER` / `ROLE_ADMIN` | Retrieves paginated orders (users see own; admins see fleet). |
+| **Orders** | `GET /api/v1/orders/{orderNumber}/status` | Public | Retrieves public tracking status for an order number. |
+| **Orders** | `PATCH /api/v1/orders/{orderNumber}/status`| `ROLE_ADMIN` | Transitions order lifecycle status along audited FSM paths. |
+
 ---
 
 ## Quickstart & Platform Orchestration
 
 ### Prerequisites
-- Java 17 LTS & Maven 3.9+
+- Java 17 LTS & Maven 3.9+ (wrapper included)
 - Google AI Studio API Key ([Get API Key](https://aistudio.google.com/apikey))
 - MySQL 8.0 (Optional; H2 in-memory database used by default for local development)
 
@@ -160,12 +215,17 @@ JWT_SECRET=your_super_secret_jwt_key_at_least_32_characters_long
 
 All services extract hostnames, ports, and external LLM keys into environment files loaded via `dotenv-java`:
 
-| Service / Layer | Config File | Template Reference | Key Variables |
-| :--- | :--- | :--- | :--- |
-| **Application Core** | `src/main/resources/application.properties` | [`.env.example`](.env.example) | `SPRING_PROFILES_ACTIVE`, `SERVER_PORT` |
-| **AI Substrate** | `application.properties` | [`.env.example`](.env.example) | `GEMINI_API_KEY`, `SPRING_AI_GEMINI_CHAT_MODEL` |
-| **Persistence Layer**| `application.properties` | [`.env.example`](.env.example) | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `HIBERNATE_DIALECT` |
-| **Security Layer** | `application.properties` | [`.env.example`](.env.example) | `JWT_SECRET`, `JWT_EXPIRATION_MS`, `JWT_REFRESH_EXPIRATION_MS` |
+| Variable | Default (Dev) | Purpose |
+| :--- | :--- | :--- |
+| `SPRING_PROFILES_ACTIVE` | `dev` | Active Spring profile (`dev` for H2, `prod` for MySQL). |
+| `SERVER_PORT` | `8080` | Port for the HTTP / REST application server. |
+| `GEMINI_API_KEY` | *(Required)* | Google AI Studio API key for Gemini Flash reasoning. |
+| `JWT_SECRET` | *(256-bit key)* | HMAC-SHA secret for token minting and signature validation. |
+| `JWT_EXPIRATION_MS` | `3600000` | Access token lifespan in milliseconds (1 hour). |
+| `DB_URL` | `jdbc:h2:mem:orderdb` | JDBC connection string. Set to MySQL connection in prod. |
+| `DB_USERNAME` | `sa` | Relational database username. |
+| `DB_PASSWORD` | *(empty)* | Relational database password. |
+| `HIBERNATE_DIALECT` | `org.hibernate.dialect.H2Dialect` | Hibernate dialect matching target datastore. |
 
 ---
 
