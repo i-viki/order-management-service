@@ -69,7 +69,7 @@ flowchart TB
         DB[("Relational Store<br/>MySQL 8.0 / H2 Engine<br/>• orders & order_items<br/>• users & refresh_tokens")]
     end
 
-    CLIENT -->|HTTPS / Bearer JWT| SECURITY
+    CLIENT -->|"HTTPS / Bearer JWT"| SECURITY
     SECURITY --> CONTROLLERS
     
     AUTH_CTRL --> AUTH_SVC
@@ -78,8 +78,8 @@ flowchart TB
 
     ORDER_SVC --> JPA
     AUTH_SVC --> JPA
-    AI_SVC -->|1. Fetch Authenticated Orders| JPA
-    AI_SVC -->|2. Inject Isolated Context| CHAT_CLIENT
+    AI_SVC -->|"1. Fetch Authenticated Orders"| JPA
+    AI_SVC -->|"2. Inject Isolated Context"| CHAT_CLIENT
     
     JPA <--> DB
 ```
