@@ -1,191 +1,227 @@
 # Order Lifecycle & Fulfillment Engine
 
-<div align="center">
-  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/spring/spring-original-wordmark.svg" alt="Spring Logo" width="100">
-  <p><i>Enterprise order processing service with audited state machine transitions, grounded AI customer resolution, and JWT token rotation.</i></p>
+[![Java](https://img.shields.io/badge/Java-17-18181b?logo=openjdk&logoColor=ED8B00&labelColor=101012)](https://adoptium.net)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-18181b?logo=springboot&logoColor=6DB33F&labelColor=101012)](https://spring.io)
+[![Spring AI](https://img.shields.io/badge/Spring%20AI-1.0.0--GA-18181b?logo=spring&logoColor=6DB33F&labelColor=101012)](https://spring.io/projects/spring-ai)
+[![Gemini](https://img.shields.io/badge/Gemini_Flash-1.5-18181b?logo=google-gemini&logoColor=4285F4&labelColor=101012)](https://deepmind.google/technologies/gemini/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-18181b?logo=mysql&logoColor=4479A1&labelColor=101012)](https://www.mysql.com)
+[![Hibernate](https://img.shields.io/badge/Hibernate-JPA-18181b?logo=hibernate&logoColor=59666C&labelColor=101012)](https://hibernate.org)
+[![MapStruct](https://img.shields.io/badge/MapStruct-1.6.0-18181b?logo=mapstruct&logoColor=F58220&labelColor=101012)](https://mapstruct.org)
+[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI_3-18181b?logo=swagger&logoColor=85EA2D&labelColor=101012)](https://swagger.io)
+[![JWT](https://img.shields.io/badge/Security-JWT-18181b?logo=jsonwebtokens&logoColor=FFFFFF&labelColor=101012)](https://jwt.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-  [![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat&logo=openjdk&logoColor=white)](https://adoptium.net/)
-  [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.1-6DB33F?style=flat&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
-  [![Spring AI](https://img.shields.io/badge/Spring_AI-1.0.0--GA-6DB33F?style=flat&logo=spring&logoColor=white)](https://spring.io/projects/spring-ai)
-  [![Gemini](https://img.shields.io/badge/Gemini_Flash-1.5-4285F4?style=flat&logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
-  [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat&logo=mysql&logoColor=white)](https://www.mysql.com/)
-  [![JWT](https://img.shields.io/badge/JWT-Stateless-000000?style=flat&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
-  [![Hibernate](https://img.shields.io/badge/Hibernate-JPA-59666C?style=flat&logo=hibernate&logoColor=white)](https://hibernate.org/)
-  [![MapStruct](https://img.shields.io/badge/MapStruct-1.6.0-F58220?style=flat&logo=mapstruct&logoColor=white)](https://mapstruct.org/)
-  [![Lombok](https://img.shields.io/badge/Lombok-1.18.34-BC1B1B?style=flat&logo=lombok&logoColor=white)](https://projectlombok.org/)
-  [![Swagger](https://img.shields.io/badge/Swagger-OpenAPI_3-85EA2D?style=flat&logo=swagger&logoColor=black)](https://swagger.io/)
-  [![Maven](https://img.shields.io/badge/Maven-3.9+-C71A36?style=flat&logo=apache-maven&logoColor=white)](https://maven.apache.org/)
-  [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](LICENSE)
-</div>
+An enterprise-grade **order processing service and intelligent customer resolution platform** combining an audited finite state machine with **grounded conversational AI**. Built on **Java 17**, **Spring Boot 3.4.1**, **Spring AI**, and **Google Gemini Flash**, the system orchestrates resilient order lifecycle transitions (`CREATED` $\to$ `PROCESSING` $\to$ `COMPLETED` / `CANCELLED`), prevents N+1 query bottlenecks via JPA EntityGraphs, and enforces strict zero-data-leakage prompt grounding to resolve customer inquiries securely.
 
 ---
 
-## Overview
+## Key Architecture Pillars
 
-The Order Lifecycle & Fulfillment Engine is an enterprise backend service engineered for resilient order processing and intelligent customer resolution. By integrating Spring AI, it enables customers to interact with their order history using natural language, while maintaining strict data privacy through Prompt Grounding.
-
-Built with Java 17 and Spring Boot, the system follows a clean layered architecture and implements robust security measures including stateless JWT authentication and Role-Based Access Control (RBAC).
-
----
-
-## Key Features
-
-### AI-Powered Support Assistant
-*   **Natural Language Queries**: Users can ask questions like "Where is my latest iPhone order?" or "How much did I spend in April?".
-*   **Prompt Grounding**: The system dynamically fetches and injects authorized order data into the AI context, ensuring the assistant only discusses data the user is permitted to see.
-*   **Gemini Integration**: Powered by Spring AI's ChatClient, utilizing the `gemini-flash-latest` model for high-performance reasoning.
-
-### Order Lifecycle Management
-*   **End-to-End Tracking**: Full lifecycle support from `CREATED` → `PROCESSING` → `COMPLETED`/`CANCELLED`.
-*   **Business Logic**: Automated tax calculations and total amount validation within the domain model.
-*   **Optimized Persistence**: High-performance database interactions using JPA EntityGraphs to eliminate N+1 query problems.
-
-### Enterprise Security
-*   **Stateless Auth**: Robust JWT-based authentication with Refresh Token support.
-*   **RBAC**: Granular permissions for `ADMIN` (full control) and `USER` (personal data access) roles.
-*   **Secure API**: Comprehensive protection of all sensitive endpoints with custom security filters and CORS configuration.
+- **Audited Order Finite State Machine (`io.github.vikij.ordermanagement.order`):**
+  Deterministic lifecycle enforcement guaranteeing orders progress strictly along validated pathways (`CREATED` $\to$ `PROCESSING` $\to$ `COMPLETED`/`CANCELLED`) with domain invariant validation and automated tax adjustments.
+- **Dynamic Prompt Grounding & Context Isolation (`io.github.vikij.ordermanagement.ai`):**
+  Secure context injection feeding only authenticated customer order history into Google Gemini Flash `ChatClient`, eliminating cross-tenant data leaks and hallucinated resolution terms.
+- **High-Performance JPA EntityGraphs (`io.github.vikij.ordermanagement.order`):**
+  Optimized relational persistence utilizing Spring Data JPA NamedEntityGraphs to fetch order headers and associated line items in a single round-trip, completely eradicating N+1 query degradation.
+- **Stateless JWT Security & Token Rotation (`io.github.vikij.ordermanagement.auth`):**
+  Dual-token architecture issuing short-lived access JWTs and database-persisted refresh tokens, paired with granular RBAC guards (`ADMIN`, `USER`).
+- **Declarative DTO Mapping with MapStruct (`io.github.vikij.ordermanagement.common`):**
+  Compile-time type-safe object transformations preventing runtime reflection penalties and maintaining absolute separation between internal JPA entities and public REST contracts.
 
 ---
 
-## Architecture
-
-The system is built on a Clean Layered Architecture, emphasizing modularity and separation of concerns.
+## System Architecture
 
 ```mermaid
-graph TD
-    A["Client"] -->|"JWT"| B("API Controller")
-    B --> C{"Service Layer"}
-    C --> D["Domain Entities"]
-    C --> E["JPA Repository"]
-    C --> F["Spring AI (Gemini)"]
-    F -->|"Grounding"| E
-    E --> G[("Database (MySQL/H2)")]
-```
+flowchart TB
+    subgraph CLIENT["Client & Consumer Tier"]
+        WEB["E-Commerce / Enterprise Web App<br/>Port: Client Dependent"]
+        MOBILE["Mobile App Client"]
+    end
 
-### Project Structure
-```text
-io.github.vikij.ordermanagement
-├── auth         # Security infrastructure (JWT, RBAC)
-├── order        # Core domain, business logic, and mapping
-├── ai           # AI orchestration and prompt grounding
-├── user         # Identity management
-├── common       # Shared exceptions and error models
-└── config       # Infrastructure configuration (Dotenv, Security)
-```
+    subgraph SECURITY["Security & Governance Perimeter"]
+        direction TB
+        JWT_FILTER["JwtAuthenticationFilter<br/>• Bearer Extraction<br/>• Signature Verification"]
+        RBAC["RBAC Authorization Guard<br/>• ROLE_USER (Own Data)<br/>• ROLE_ADMIN (Global Fleet)"]
+        JWT_FILTER --> RBAC
+    end
 
----
+    subgraph CONTROLLERS["API Gateway & Controllers (Java 17 / Spring Boot)"]
+        AUTH_CTRL["AuthController<br/>/api/v1/auth/*"]
+        ORDER_CTRL["OrderController<br/>/api/v1/orders/*"]
+        AI_CTRL["AiController<br/>/api/v1/ai/chat"]
+    end
 
-## API Reference
+    subgraph SERVICES["Core Service & Domain Layer"]
+        AUTH_SVC["AuthService<br/>• Token Minting<br/>• Refresh Rotation"]
+        ORDER_SVC["OrderService<br/>• State Machine FSM<br/>• Tax Computation Engine"]
+        AI_SVC["AiService<br/>• Context Grounding<br/>• Prompt Isolation Filter"]
+    end
 
-All API endpoints are prefixed with `/api/v1`.
+    subgraph AI_CORE["Spring AI & Gemini Inference"]
+        CHAT_CLIENT["Spring AI ChatClient<br/>• System Prompt Grounding<br/>• Model: gemini-flash-latest"]
+    end
 
-### Authentication
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/signup` | Register a new user. |
-| `POST` | `/api/v1/auth/login` | Obtain Access and Refresh Tokens. |
-| `POST` | `/api/v1/auth/refresh` | Refresh an expired access token. |
+    subgraph DATA_TIER["Persistence Infrastructure"]
+        JPA["Spring Data JPA + EntityGraphs<br/>(N+1 Query Elimination)"]
+        DB[("Relational Store<br/>MySQL 8.0 / H2 Engine<br/>• orders & order_items<br/>• users & refresh_tokens")]
+    end
 
-### AI Support
-| Method | Endpoint | Access | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/ai/chat` | Authenticated | Query the AI assistant about your orders. |
+    CLIENT -->|HTTPS / Bearer JWT| SECURITY
+    SECURITY --> CONTROLLERS
+    
+    AUTH_CTRL --> AUTH_SVC
+    ORDER_CTRL --> ORDER_SVC
+    AI_CTRL --> AI_SVC
 
-### Orders
-| Method | Endpoint | Access | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/orders` | USER | Create a new order. |
-| `GET` | `/api/v1/orders` | USER/ADMIN | Paginated list of orders. |
-| `GET` | `/api/v1/orders/{orderNumber}/status` | Public | Get public status of an order. |
-| `PATCH`| `/api/v1/orders/{orderNumber}/status` | ADMIN | Transition order status. |
-
----
-
-## Prompt Grounding Implementation
-
-The system implements a secure grounding pattern to prevent data leaks. Before sending a query to the LLM, the `AiService` performs the following steps:
-
-1.  **Identify**: Extract the authenticated user identity from the security context.
-2.  **Fetch**: Retrieve only the orders belonging to that specific user via `orderRepository.findByCreatedBy(user)`.
-3.  **Context Injection**: Format the orders into a secure system prompt.
-4.  **Execute**: Send the grounded prompt + user query to the AI model.
-
-```java
-// Logic used in AiService.java
-String ordersData = userOrders.stream()
-    .map(order -> String.format("- Order #%s: %s", order.getOrderNumber(), order.getStatus()))
-    .collect(Collectors.joining("\n"));
-
-return chatClient.prompt()
-    .system(s -> s.text(SYSTEM_PROMPT_TEMPLATE)
-        .param("name", user.getFirstName())
-        .param("orders_data", ordersData))
-    .user(userQuery)
-    .call()
-    .content();
+    ORDER_SVC --> JPA
+    AUTH_SVC --> JPA
+    AI_SVC -->|1. Fetch Authenticated Orders| JPA
+    AI_SVC -->|2. Inject Isolated Context| CHAT_CLIENT
+    
+    JPA <--> DB
 ```
 
 ---
 
-## Technology Stack
+## Order State Machine & Grounding Invariants
 
-*   **Core**: Java 17, Spring Boot 3.4.1
-*   **AI**: Spring AI, Google Gemini (`gemini-flash-latest`)
-*   **Data**: Hibernate, Spring Data JPA, MySQL (Production), H2 (Development)
-*   **Mapping**: MapStruct (DTO <-> Entity)
-*   **Security**: Spring Security, JJWT, Dotenv-java
-*   **Docs**: Springdoc OpenAPI (Swagger UI)
+The platform maintains strict integrity across order status progressions and AI reasoning boundaries:
+
+$$\text{TotalAmount} = \sum_{i=1}^{n} (\text{UnitPrice}_i \times \text{Quantity}_i) \times (1 + \text{TaxRate})$$
+
+$$\text{Context}_{\text{LLM}} = \{ O_k \in \text{Orders} \mid O_k.\text{userId} = \text{Principal}.\text{id} \}$$
+
+| Initial State | Allowed Target State | Trigger Condition | Authorization Required |
+| :--- | :--- | :--- | :---: |
+| **`CREATED`** | `PROCESSING` | Payment confirmed & inventory reserved | `ROLE_ADMIN` |
+| **`CREATED`** | `CANCELLED` | Customer cancellation before fulfillment | `ROLE_USER` / `ROLE_ADMIN` |
+| **`PROCESSING`**| `COMPLETED` | Carrier delivery confirmation | `ROLE_ADMIN` |
+| **`PROCESSING`**| `CANCELLED` | Inventory deficit / fulfillment failure | `ROLE_ADMIN` |
+| **`COMPLETED`** | *Terminal* | Immutable record; archive state | None |
+| **`CANCELLED`** | *Terminal* | Immutable record; refund issued | None |
 
 ---
 
-## Setup & Installation
+## Quickstart & Platform Orchestration
 
-### 1. Clone the Repository
+### Prerequisites
+- Java 17 LTS & Maven 3.9+
+- Google AI Studio API Key ([Get API Key](https://aistudio.google.com/apikey))
+- MySQL 8.0 (Optional; H2 in-memory database used by default for local development)
+
+---
+
+### Option A: Local Development Launch with H2 (Recommended)
+
+Run the entire platform with embedded H2 persistence and live Swagger documentation:
 ```bash
+# Clone repository
 git clone https://github.com/i-viki/order-management-service.git
 cd order-management-service
+
+# Create local environment config
+cp .env.example .env
+# Edit .env and insert your GEMINI_API_KEY
+
+# Launch application via Maven wrapper
+./mvnw spring-boot:run
+```
+*Application boots on `http://localhost:8080` with in-memory H2 database active.*
+
+---
+
+### Option B: Production MySQL Launch
+
+#### Step 1: Start MySQL Datastore
+```bash
+docker run --name order-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=order_management -p 3306:3306 -d mysql:8.0
 ```
 
-### 2. Configure Environment
-The system uses `dotenv-java` to automatically load variables. Create a `.env` file in the project root:
-
+#### Step 2: Configure Environment Profile
+Set `SPRING_PROFILES_ACTIVE=prod` in `.env` and configure MySQL credentials:
 ```properties
-# Server Configuration
-SPRING_PROFILES_ACTIVE=dev
-
-# AI Configuration (Google AI Studio)
+SPRING_PROFILES_ACTIVE=prod
+DB_URL=jdbc:mysql://localhost:3306/order_management
+DB_USERNAME=root
+DB_PASSWORD=root
 GEMINI_API_KEY=your_gemini_api_key_here
-
-# Security
 JWT_SECRET=your_super_secret_jwt_key_at_least_32_characters_long
-JWT_EXPIRATION_MS=3600000
-
-# Database - H2 (Default for dev)
-# To use MySQL, uncomment and update:
-# DB_URL=jdbc:mysql://localhost:3306/order_management
-# DB_USERNAME=root
-# DB_PASSWORD=your_password
-# DB_DRIVER=com.mysql.cj.jdbc.Driver
-# HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
 ```
 
-### 3. Run the Application
+#### Step 3: Boot Application
 ```bash
 ./mvnw spring-boot:run
 ```
 
 ---
 
-## Author
+## Decoupled Environment Strategy
 
-**Jaya Vignesh (Jayavignesh)**
-*Java Backend Engineer specializing in High-Performance Java Systems.*
+All services extract hostnames, ports, and external LLM keys into environment files loaded via `dotenv-java`:
 
-- [Portfolio](https://jayavignesh.dev)
-- [GitHub](https://github.com/i-viki)
-- [LinkedIn](https://www.linkedin.com/in/jayavigneshj/)
+| Service / Layer | Config File | Template Reference | Key Variables |
+| :--- | :--- | :--- | :--- |
+| **Application Core** | `src/main/resources/application.properties` | [`.env.example`](.env.example) | `SPRING_PROFILES_ACTIVE`, `SERVER_PORT` |
+| **AI Substrate** | `application.properties` | [`.env.example`](.env.example) | `GEMINI_API_KEY`, `SPRING_AI_GEMINI_CHAT_MODEL` |
+| **Persistence Layer**| `application.properties` | [`.env.example`](.env.example) | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `HIBERNATE_DIALECT` |
+| **Security Layer** | `application.properties` | [`.env.example`](.env.example) | `JWT_SECRET`, `JWT_EXPIRATION_MS`, `JWT_REFRESH_EXPIRATION_MS` |
 
 ---
-<div align="center">
-  <sub>Built with Precision</sub>
-</div>
+
+## Live Telemetry & Observability Hubs
+
+| Hub / Service | Port | URL | Role & Live Features |
+| :--- | :--- | :--- | :--- |
+| **Interactive Swagger UI** | `8080` | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) | OpenAPI 3.0 interactive API documentation and execution sandbox. |
+| **OpenAPI Schema** | `8080` | [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs) | Raw JSON OpenAPI 3 specification for client SDK generation. |
+| **H2 Database Console** | `8080` | [http://localhost:8080/h2-console](http://localhost:8080/h2-console) | In-memory relational inspection console (`jdbc:h2:mem:orderdb`). |
+| **Actuator Health** | `8080` | [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health) | Application health checks, datasource validation, and JVM metrics. |
+
+---
+
+## Testing & Quality Assurance Suite
+
+### Unit & Integration Test Suites
+```bash
+./mvnw test
+# Validates order lifecycle state transitions, MapStruct bindings, and security filters.
+```
+
+### AI Support Query with Grounded Orders
+```bash
+curl -X POST http://localhost:8080/api/v1/ai/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{
+    "message": "Where is my latest order and what items are included?"
+  }'
+```
+
+### Order Creation Sample Request
+```bash
+curl -X POST http://localhost:8080/api/v1/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{
+    "items": [
+      { "productName": "Ergonomic Mechanical Keyboard", "quantity": 1, "unitPrice": 149.99 },
+      { "productName": "USB-C Braided Cable", "quantity": 2, "unitPrice": 19.99 }
+    ]
+  }'
+```
+
+---
+
+## Author
+
+**Jayavignesh**
+- **Website:** [jayavignesh.dev](https://jayavignesh.dev)
+- **GitHub:** [@i-viki](https://github.com/i-viki)
+- **Email:** [hello@jayavignesh.dev](mailto:hello@jayavignesh.dev)
+
+---
+
+## License
+
+This platform is distributed under the **MIT License**. See the [`LICENSE`](LICENSE) file for complete terms.
