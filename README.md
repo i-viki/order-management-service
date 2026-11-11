@@ -13,14 +13,14 @@
 [![JWT](https://img.shields.io/badge/Security-JWT-18181b?logo=jsonwebtokens&logoColor=FFFFFF&labelColor=101012)](https://jwt.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An enterprise-grade **order processing service and intelligent customer resolution platform** combining an audited finite state machine with **grounded conversational AI**. Built on **Java 17**, **Spring Boot 3.4.1**, **Spring AI**, and **Google Gemini Flash**, the system orchestrates resilient order lifecycle transitions (`CREATED` $\to$ `PROCESSING` $\to$ `COMPLETED` / `CANCELLED`), prevents N+1 query bottlenecks via JPA EntityGraphs, and enforces strict zero-data-leakage prompt grounding to resolve customer inquiries securely.
+An enterprise-grade **order processing service and intelligent customer resolution platform** combining an audited finite state machine with **grounded conversational AI**. Built on **Java 17**, **Spring Boot 3.4.1**, **Spring AI**, and **Google Gemini Flash**, the system orchestrates resilient order lifecycle transitions (`CREATED` → `PROCESSING` → `COMPLETED` / `CANCELLED`), prevents N+1 query bottlenecks via JPA EntityGraphs, and enforces strict zero-data-leakage prompt grounding to resolve customer inquiries securely.
 
 ---
 
 ## Key Architecture Pillars
 
 - **Audited Order Finite State Machine (`io.github.vikij.ordermanagement.order`):**
-  Deterministic lifecycle enforcement guaranteeing orders progress strictly along validated pathways (`CREATED` $\to$ `PROCESSING` $\to$ `COMPLETED`/`CANCELLED`) with domain invariant validation and automated tax adjustments.
+  Deterministic lifecycle enforcement guaranteeing orders progress strictly along validated pathways (`CREATED` → `PROCESSING` → `COMPLETED`/`CANCELLED`) with domain invariant validation and automated tax adjustments.
 - **Dynamic Prompt Grounding & Context Isolation (`io.github.vikij.ordermanagement.ai`):**
   Secure context injection feeding only authenticated customer order history into Google Gemini Flash `ChatClient`, eliminating cross-tenant data leaks and hallucinated resolution terms.
 - **High-Performance JPA EntityGraphs (`io.github.vikij.ordermanagement.order`):**
